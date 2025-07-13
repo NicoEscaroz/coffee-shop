@@ -39,8 +39,6 @@ export interface ProductoVendido {
 
 // Obtener todos los productos
 export const getAllProducts = async (): Promise<Product[] | null> => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { data } = await supabase.from("Productos").select();
     try {
         const { data, error } = await supabase
             .from("Productos") // Nombre correcto de la tabla
