@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSalesDetailsByDateRange, ProductoVendido } from "../db/db";
+import { getSalesDetailsByDateRange, ProductoVendido, diagnosticarBaseDatos } from "../db/db";
 
 const PosVentasScreen = () => {
   const [productosVendidos, setProductosVendidos] = useState<ProductoVendido[]>([]);
@@ -7,13 +7,30 @@ const PosVentasScreen = () => {
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
   const [filtroAplicado, setFiltroAplicado] = useState(false);
+  const [diagnosticoInfo, setDiagnosticoInfo] = useState<{
+    salesExists: boolean;
+    salesCount: number;
+    detailsExists: boolean;
+    detailsCount: number;
+    productsCount: number;
+    joinWorks: boolean;
+  } | null>(null);
 
   // Configurar fechas por defecto (hoy)
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     setFechaInicio(today);
     setFechaFin(today);
+    
+    // Ejecutar diagnóstico al cargar
+    ejecutarDiagnostico();
   }, []);
+
+  const ejecutarDiagnostico = async () => {
+    console.log("🔍 Ejecutando diagnóstico de base de datos...");
+    const resultado = await diagnosticarBaseDatos();
+    setDiagnosticoInfo(resultado);
+  };
 
   const fetchProductosVendidos = async (inicio?: string, fin?: string) => {
     setLoading(true);
@@ -21,12 +38,16 @@ const PosVentasScreen = () => {
       const startDate = inicio || fechaInicio;
       const endDate = fin || fechaFin;
       
+      console.log(`🔎 Buscando ventas del ${startDate} al ${endDate}`);
+      
       const data = await getSalesDetailsByDateRange(startDate, endDate);
-      console.log("Datos de ventas obtenidos:", data);
+      console.log("📊 Datos de ventas obtenidos:", data);
+      console.log("📈 Cantidad de productos encontrados:", data?.length || 0);
+      
       setProductosVendidos(data || []);
       setFiltroAplicado(true);
     } catch (error) {
-      console.error("Error fetching sales details:", error);
+      console.error("💥 Error fetching sales details:", error);
       setProductosVendidos([]);
     } finally {
       setLoading(false);
@@ -131,6 +152,38 @@ const PosVentasScreen = () => {
           </button>
         </div>
       </div>
+
+      {/* Información de Diagnóstico */}
+      {diagnosticoInfo && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <h3 className="font-semibold text-blue-800 mb-2 flex items-center">
+            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/>
+            </svg>
+            Estado de la Base de Datos
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+            <div className={`p-2 rounded ${diagnosticoInfo.salesExists ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              <div className="font-medium">Tabla Sales</div>
+              <div>{diagnosticoInfo.salesExists ? `✅ ${diagnosticoInfo.salesCount} registros` : '❌ No existe'}</div>
+            </div>
+            <div className={`p-2 rounded ${diagnosticoInfo.detailsExists ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              <div className="font-medium">Tabla SalesDetails</div>
+              <div>{diagnosticoInfo.detailsExists ? `✅ ${diagnosticoInfo.detailsCount} registros` : '❌ No existe'}</div>
+            </div>
+            <div className={`p-2 rounded ${diagnosticoInfo.joinWorks ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              <div className="font-medium">Relación JOIN</div>
+              <div>{diagnosticoInfo.joinWorks ? '✅ Funciona' : '❌ Error'}</div>
+            </div>
+          </div>
+          {(!diagnosticoInfo.salesExists || !diagnosticoInfo.detailsExists || !diagnosticoInfo.joinWorks) && (
+            <div className="mt-3 p-3 bg-yellow-100 border border-yellow-300 rounded text-yellow-800 text-sm">
+              <strong>⚠️ Acción requerida:</strong> Las nuevas tablas de ventas no están configuradas. 
+              Por favor ejecuta la migración de la base de datos como se describe en la documentación.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tarjetas de resumen */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

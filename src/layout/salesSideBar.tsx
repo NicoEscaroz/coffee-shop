@@ -1,5 +1,5 @@
 import { ProductSales } from "../components/sales";
-import { crearDetalleVenta, crearVenta, validarStockDisponible } from "../db/db";
+import { crearVentaCompleta, validarStockDisponible } from "../db/db";
 
 interface SelectedProduct extends ProductSales {
   quantity: number;
@@ -47,7 +47,7 @@ const SalesSideBar = ({ selectedProducts, setSelectedProducts }: Props) => {
     if (selectedProducts.length === 0) return;
 
     const items = selectedProducts.map((prod) => ({
-      productoId: String(prod.id),
+      productoId: prod.id, // Ya es number, no convertir a string
       cantidad: prod.quantity,
     }));
 
@@ -57,10 +57,19 @@ const SalesSideBar = ({ selectedProducts, setSelectedProducts }: Props) => {
       return;
     }
 
-    const venta = await crearVenta(totalVenta);
-    if (!venta) return;
-
-    await crearDetalleVenta(venta.id, items);
+    // Usar la nueva función crearVentaCompleta en lugar de crear venta y detalles por separado
+    const venta = await crearVentaCompleta(
+      items,
+      'efectivo', // método de pago por defecto
+      undefined,  // vendedor opcional
+      undefined,  // notas opcionales
+      0          // sin descuento por defecto
+    );
+    
+    if (!venta) {
+      alert("Error al procesar la venta");
+      return;
+    }
 
     setSelectedProducts([]);
     alert("¡Venta registrada con éxito!");

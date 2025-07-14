@@ -4,6 +4,7 @@ import Menu from './components/menu';
 import Sales from './components/sales';
 import Inventory from './components/inventory';
 import SalesTable from './components/salesTable';
+import DeletedProducts from './components/deletedProducts';
 
 const AppRoutes = () => {
     return (
@@ -13,6 +14,7 @@ const AppRoutes = () => {
             <Route path="/sales" element={<Sales/>}/>
             <Route path="/inventory" element={<Inventory/>}/>
             <Route path="/salesRecord" element={<SalesTable/>}/>
+            <Route path="/deleted-products" element={<DeletedProducts/>}/>
         </Routes>
     );
 };
