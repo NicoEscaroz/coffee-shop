@@ -104,9 +104,6 @@ const Menu = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold mb-2">¡Bienvenido a Corazón y Fuego!</h1>
-              <p className="text-xl text-blue-100 mb-4">
-                Donde cada taza cuenta una historia de amor y propósito
-              </p>
               <div className="flex items-center space-x-4 text-blue-200">
                 <div className="flex items-center space-x-2">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
